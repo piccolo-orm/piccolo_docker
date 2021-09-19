@@ -25,8 +25,7 @@ repos:
     rev: 3.9.2
     hooks:
       - id: flake8
-        args:
-        - --max-line-length=120
+        args: ["--max-line-length", "120"]
 
   - repo: https://github.com/timothycrosley/isort
     rev: 5.9.3
@@ -45,4 +44,7 @@ repos:
     rev: v3.0.0a4
     hooks:
       - id: pylint
-        exclude: missing-module-docstring
+        args: [
+            "--disable", "missing-module-docstring",
+            "--disable", "import-error",
+        ]
