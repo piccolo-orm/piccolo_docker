@@ -45,3 +45,4 @@ repos:
     rev: v3.0.0a4
     hooks:
       - id: pylint
+        exclude: missing-module-docstring
