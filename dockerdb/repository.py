@@ -1,10 +1,8 @@
 import logging
 from time import sleep
-from typing import Optional
 
 import asyncpg
 import docker
-from docker.client import DockerClient
 from docker.errors import APIError, NotFound
 from docker.models.containers import Container
 
@@ -15,7 +13,6 @@ from dockerdb.constants import (
     PG_PASSWORD,
     PG_PORT,
     PG_USER,
-    UNIQUE_CONTAINER_LABELS,
     UNIQUE_CONTAINER_NAME,
 )
 
@@ -33,7 +30,6 @@ class PiccoloDockerRepository:
         pg_password=PG_PASSWORD,
         pg_port=PG_PORT,
         pg_user=PG_USER,
-        unique_container_labels=Optional[UNIQUE_CONTAINER_LABELS],
         unique_container_name=UNIQUE_CONTAINER_NAME,
         auto_remove=False,
     ):
@@ -41,14 +37,13 @@ class PiccoloDockerRepository:
         Parameterised in order to facilitate testing.
         Some of the values are env var/constants that are monkeypatched in the tests
         """
-        self.docker_client: DockerClient = docker.from_env()
+        self.docker_client = docker.from_env()
         self.pg_database = pg_database
         self.pg_host = pg_host
         self.pg_image_name = pg_image_name
         self.pg_password = pg_password
         self.pg_port = pg_port
         self.pg_user = pg_user
-        self.unique_container_labels = unique_container_labels
         self.unique_container_name = unique_container_name
         self.auto_remove = auto_remove
 
@@ -123,7 +118,6 @@ class PiccoloDockerRepository:
                     "PGPORT": self.pg_port,
                 },
                 detach=True,
-                labels=self.unique_container_labels,
                 auto_remove=self.auto_remove,
             )
             logging.info("Container %s started", self.unique_container_name)
