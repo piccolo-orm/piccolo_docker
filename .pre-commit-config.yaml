@@ -47,4 +47,5 @@ repos:
         args: [
             "--disable", "missing-module-docstring",
             "--disable", "import-error",
+            "--disable", "raise-missing-from"
         ]
