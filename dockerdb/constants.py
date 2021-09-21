@@ -16,4 +16,3 @@ PG_USER = "postgres"
 UNIQUE_CONTAINER_NAME = getenv(
     key="UNIQUE_CONTAINER_NAME", default="piccolo_postgres_7677f8bd"
 )
-UNIQUE_CONTAINER_LABELS = {"f2c62b9d": "2eb8705fda65"}
