@@ -45,6 +45,8 @@ repos:
     hooks:
       - id: pylint
         args: [
+            "--max-attributes", "10",
+            "--max-args", "10",
             "--disable", "missing-module-docstring",
             "--disable", "import-error",
             "--disable", "raise-missing-from"
