@@ -24,14 +24,14 @@ class PiccoloDockerRepository:
 
     def __init__(
         self,
-        pg_database=PG_DATABASE,
-        pg_host=PG_HOST,
-        pg_image_name=PG_IMAGE_NAME,
-        pg_password=PG_PASSWORD,
-        pg_port=PG_PORT,
-        pg_user=PG_USER,
-        unique_container_name=UNIQUE_CONTAINER_NAME,
-        auto_remove=False,
+        pg_database: str = PG_DATABASE,
+        pg_host: str = PG_HOST,
+        pg_image_name: str = PG_IMAGE_NAME,
+        pg_password: str = PG_PASSWORD,
+        pg_port: str = PG_PORT,
+        pg_user: str = PG_USER,
+        unique_container_name: str = UNIQUE_CONTAINER_NAME,
+        auto_remove: bool = False,
     ):
         """
         Parameterised in order to facilitate testing.
