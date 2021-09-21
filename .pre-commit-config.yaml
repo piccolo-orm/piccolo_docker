@@ -49,5 +49,6 @@ repos:
             "--max-args", "10",
             "--disable", "missing-module-docstring",
             "--disable", "import-error",
-            "--disable", "raise-missing-from"
+            "--disable", "raise-missing-from",
+            "--disable", "import-outside-toplevel",
         ]
