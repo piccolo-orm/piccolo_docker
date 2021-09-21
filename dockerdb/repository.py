@@ -1,5 +1,6 @@
 import logging
 from time import sleep
+from typing import Optional
 
 import asyncpg
 import docker
@@ -24,8 +25,32 @@ class PiccoloDockerRepository:
     Manage the life of a piccolo postgres container.
     """
 
-    def __init__(self):
+    def __init__(
+        self,
+        pg_database=PG_DATABASE,
+        pg_host=PG_HOST,
+        pg_image_name=PG_IMAGE_NAME,
+        pg_password=PG_PASSWORD,
+        pg_port=PG_PORT,
+        pg_user=PG_USER,
+        unique_container_labels=Optional[UNIQUE_CONTAINER_LABELS],
+        unique_container_name=UNIQUE_CONTAINER_NAME,
+        auto_remove=False,
+    ):
+        """
+        Parameterised in order to facilitate testing.
+        Some of the values are env var/constants that are monkeypatched in the tests
+        """
         self.docker_client: DockerClient = docker.from_env()
+        self.pg_database = pg_database
+        self.pg_host = pg_host
+        self.pg_image_name = pg_image_name
+        self.pg_password = pg_password
+        self.pg_port = pg_port
+        self.pg_user = pg_user
+        self.unique_container_labels = unique_container_labels
+        self.unique_container_name = unique_container_name
+        self.auto_remove = auto_remove
 
     @property
     def container_exists(self) -> bool:
@@ -36,7 +61,9 @@ class PiccoloDockerRepository:
         :rtype: bool
         """
         return (
-            self.docker_client.containers.list(filters={"name": UNIQUE_CONTAINER_NAME})
+            self.docker_client.containers.list(
+                filters={"name": self.unique_container_name}
+            )
             != []
         )
 
@@ -57,7 +84,7 @@ class PiccoloDockerRepository:
         :return: postgres container name
         :rtype: str
         """
-        return UNIQUE_CONTAINER_NAME
+        return self.unique_container_name
 
     @property
     def container(self) -> Container:
@@ -79,25 +106,27 @@ class PiccoloDockerRepository:
             logging.info("Container %s is running. Nothing to do.", self.container_name)
             return
 
-        logging.info("Getting %s", PG_IMAGE_NAME)
-        self.docker_client.images.get(name=PG_IMAGE_NAME)
+        logging.info("Getting %s", self.pg_image_name)
+        self.docker_client.images.get(name=self.pg_image_name)
 
         try:
 
             logging.info("Starting postgres container")
             self.docker_client.containers.run(
-                image=PG_IMAGE_NAME,
-                ports={f"{PG_PORT}/tcp": f"{PG_PORT}/tcp"},
+                image=self.pg_image_name,
+                ports={f"{self.pg_port}/tcp": f"{self.pg_port}/tcp"},
                 name=self.container_name,
                 hostname="postgres",
                 environment={
-                    "POSTGRES_PASSWORD": PG_PASSWORD,
+                    "POSTGRES_PASSWORD": self.pg_password,
                     "POSTGRES_HOST_AUTH_METHOD": "trust",
+                    "PGPORT": self.pg_port,
                 },
                 detach=True,
-                labels=UNIQUE_CONTAINER_LABELS,
+                labels=self.unique_container_labels,
+                auto_remove=self.auto_remove,
             )
-            logging.info("Container %s started", UNIQUE_CONTAINER_NAME)
+            logging.info("Container %s started", self.unique_container_name)
 
         except APIError as api_error:
 
@@ -105,8 +134,13 @@ class PiccoloDockerRepository:
                 logging.error(
                     "Remove the container before re-creating it. Use 'piccolo dockerdb destroy'"
                 )
+            if api_error.status_code == 500:
+                logging.error(
+                    "Port %s is in use. Try 'piccolo dockerdb destroy'",
+                    self.pg_port,
+                )
             else:
-                raise APIError from api_error
+                raise APIError(api_error)
 
     async def create_database(self) -> str:
         """
@@ -116,7 +150,7 @@ class PiccoloDockerRepository:
         """
 
         # Check if the default database name has been changed
-        if PG_DATABASE in ["postgres", ""]:
+        if self.pg_database in ["postgres", ""]:
             raise ValueError("Did you forget to set a new database name in .env?")
 
         is_ready_exit_code = 1
@@ -127,24 +161,26 @@ class PiccoloDockerRepository:
                 sleep(1)
 
         connection = await asyncpg.connect(
-            host=PG_HOST,
-            port=PG_PORT,
-            user=PG_USER,
-            password=PG_PASSWORD,
+            host=self.pg_host,
+            port=self.pg_port,
+            user=self.pg_user,
+            password=self.pg_password,
         )
 
         # Check the database name doesn't exist
         result = await connection.fetchrow(
-            "select datname from pg_database where datname = $1", PG_DATABASE
+            "select datname from pg_database where datname = $1", self.pg_database
         )
         if not result:
-            logging.info("Creating %s database...", PG_DATABASE)
-            await connection.execute(f"create database {PG_DATABASE}")
-            logging.info("Created %s database.", UNIQUE_CONTAINER_NAME)
-        elif list(result.values()) == [PG_DATABASE]:
-            logging.info("Database % exists. Nothing to do.", UNIQUE_CONTAINER_NAME)
+            logging.info("Creating %s database...", self.pg_database)
+            await connection.execute(f"create database {self.pg_database}")
+            logging.info("Created %s database.", self.unique_container_name)
+        elif list(result.values()) == [self.pg_database]:
+            logging.info(
+                "Database % exists. Nothing to do.", self.unique_container_name
+            )
 
-        return PG_DATABASE
+        return self.pg_database
 
     def destroy(self) -> None:
         """
@@ -152,15 +188,17 @@ class PiccoloDockerRepository:
         """
         try:
             self.container.remove(force=True)
-            logging.info("Container %s is destroyed forever.", UNIQUE_CONTAINER_NAME)
+            logging.info(
+                "Container %s is destroyed forever.", self.unique_container_name
+            )
         except NotFound as not_found:
             if not_found.status_code == 404:
                 logging.warning(
                     "Container %s does not exist. Nothing to destroy.",
-                    UNIQUE_CONTAINER_NAME,
+                    self.unique_container_name,
                 )
             else:
-                raise NotFound from not_found
+                raise NotFound(not_found)
 
     def start(self) -> None:
         """
@@ -171,15 +209,15 @@ class PiccoloDockerRepository:
         if not self.container_exists:
             logging.warning(
                 "Container %s does not exist. Did you mean 'piccolo dockerdb create'?",
-                UNIQUE_CONTAINER_NAME,
+                self.unique_container_name,
             )
 
         if not self.container_is_running:
             self.container.start()
-            logging.info("Container %s has started.", UNIQUE_CONTAINER_NAME)
+            logging.info("Container %s has started.", self.unique_container_name)
         else:
             logging.info(
-                "Container %s is running. Nothing to do.", UNIQUE_CONTAINER_NAME
+                "Container %s is running. Nothing to do.", self.unique_container_name
             )
 
     def stop(self):
@@ -190,8 +228,9 @@ class PiccoloDockerRepository:
         """
         if self.container_is_running:
             self.container.stop()
-            logging.info("Container %s has stopped.", UNIQUE_CONTAINER_NAME)
+            logging.info("Container %s has stopped.", self.unique_container_name)
         else:
             logging.info(
-                "Container %s is not running. Nothing to do.", UNIQUE_CONTAINER_NAME
+                "Container %s is not running. Nothing to do.",
+                self.unique_container_name,
             )
