@@ -32,4 +32,4 @@ except InvalidCatalogNameError:
     )
     PG_DATABASE = "postgres"
 
-APP_REGISTRY = AppRegistry(apps=["dockerdb.app"])
+APP_REGISTRY = AppRegistry(apps=["dockerdb.piccolo_app"])
