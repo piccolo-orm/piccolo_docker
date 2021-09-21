@@ -10,8 +10,10 @@ Easily spin up databases for your Piccolo project using Docker
 - Clone this repo
 - Open `.env`
 - Add database name
-- Add password
+- Add password. If you don't a random password will be generated that can be seen with `docker inspect --format="{{index .Config.Env 0}}" your_container_name`
 - Change the unique container name if you don't want to use the default
+- To add use this app to your Piccolo project, add it to your `AppRegistry` in `piccolo_conf.py` with: `APP_REGISTRY = AppRegistry(apps=["piccolo_docker.user.piccolo_app"])`
+
 
 ### Usage
 - `piccolo dockerdb create`
