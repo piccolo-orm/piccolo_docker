@@ -32,9 +32,12 @@ destroys the docker container. This is irreversible.
 Simply run:
 `pytest -vv tests/`
 
+For the `nox` tests you'll probably need pyenv and all versions of python that are declared inside `noxfile.py`
+
 ### Improvements
 - Test against multiple versions of postgres
-- Test against multiple versions of python
+- Test against more versions of python.
+
 
 ### To Contribute
 - Fork the repo
