@@ -24,6 +24,7 @@ bandit = "^1.7.0"
 pytest-env = "^0.6.2"
 Faker = "^8.13.2"
 nox = "^2021.6.12"
+twine = "^3.4.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
