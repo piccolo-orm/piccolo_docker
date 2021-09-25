@@ -7,6 +7,7 @@ __pycache__/
 *.so
 
 # Distribution / packaging
+# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -127,3 +128,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# IDE
+.idea
+
+# project specific
+.ignore.sqlite

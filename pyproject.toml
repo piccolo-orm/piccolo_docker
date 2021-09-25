@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "piccolo_docker"
+version = "0.1.0"
+description = "Easily spin up databases for your Piccolo project using Docker"
+authors = ["antonio-one <antonio.one@pm.me>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+piccolo = {extras = ["all"], version = "^0.48.0"}
+docker = "^5.0.2"
+python-dotenv = "^0.19.0"
+asyncpg = "^0.24.0"
+
+[tool.poetry.dev-dependencies]
+pre-commit = "^2.15.0"
+black = "^21.9b0"
+flake8 = "^3.9.2"
+isort = "^5.9.3"
+mypy = "^0.910"
+pylint = "^2.10.2"
+pytest = "^6.2.5"
+pdbpp = "^0.10.3"
+bandit = "^1.7.0"
+pytest-env = "^0.6.2"
+Faker = "^8.13.2"
+nox = "^2021.6.12"
+twine = "^3.4.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
